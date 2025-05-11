@@ -13,19 +13,30 @@ export class AuthService {
 
   async validateUser(username: string, password: string) {
     const user = await this.usersService.findUser(username);
-    const passwordIsMatch = await argon2.verify(user.password, password);
-
-    if (user && passwordIsMatch) {
-      return user;
+    if (!user) {
+      throw new UnauthorizedException({
+        status: 'error',
+        message: 'Пользователь не найден',
+      });
     }
 
-    throw new UnauthorizedException();
+    const passwordIsMatch = await argon2.verify(user.password, password);
+    if (!passwordIsMatch) {
+      throw new UnauthorizedException({
+        status: 'error',
+        message: 'Недействительные учетные данные',
+      });
+    }
+
+    return user;
   }
 
   async login(user: IUser) {
     const { id, username } = user;
 
     return {
+      status: 'success',
+      message: 'Вход успешен',
       id,
       username,
       token: this.jwtService.sign({ id: user.id, username: user.username }),

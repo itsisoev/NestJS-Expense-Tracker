@@ -19,7 +19,12 @@ export class UsersService {
         username: createUserDto.username,
       },
     });
-    if (existUser) throw new BadRequestException('this username already exist');
+    if (existUser) {
+      throw new BadRequestException({
+        status: 'error',
+        message: 'Это имя пользователя уже существует',
+      });
+    }
 
     const user = await this.userRepository.save({
       username: createUserDto.username,
@@ -28,7 +33,12 @@ export class UsersService {
 
     const token = this.jwtService.sign({ username: createUserDto.username });
 
-    return { user, token };
+    return {
+      status: 'success',
+      message: 'Пользователь успешно создан',
+      user,
+      token,
+    };
   }
 
   async findUser(username: string) {
