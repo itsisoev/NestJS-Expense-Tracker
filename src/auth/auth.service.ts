@@ -39,7 +39,10 @@ export class AuthService {
       message: 'Вход успешен',
       id,
       username,
-      token: this.jwtService.sign({ id: user.id, username: user.username }),
+      token: this.jwtService.sign({
+        sub: id,
+        username,
+      }),
     };
   }
 }

@@ -6,6 +6,8 @@ import { UsersModule } from './users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { CategoryModule } from './category/category.module';
+import { TransactionModule } from './transaction/transaction.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
       }),
       inject: [ConfigService],
     }),
+    CategoryModule,
+    TransactionModule,
   ],
   controllers: [AppController],
   providers: [
