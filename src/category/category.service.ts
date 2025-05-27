@@ -25,7 +25,9 @@ export class CategoryService {
     });
 
     if (isExist > 0)
-      throw new BadRequestException('This category already exists');
+      throw new BadRequestException(
+        'Категория с таким названием уже существует',
+      );
 
     const newCategory = this.categoryRepository.create({
       title: createCategoryDto.title,
@@ -34,7 +36,12 @@ export class CategoryService {
       },
     });
 
-    return await this.categoryRepository.save(newCategory);
+    const savedCategory = await this.categoryRepository.save(newCategory);
+
+    return {
+      message: 'Категория успешно создана',
+      data: savedCategory,
+    };
   }
 
   async findCategories(id: string) {
@@ -68,15 +75,24 @@ export class CategoryService {
       ...updateCategoryDto,
     });
 
-    if (!category) throw new NotFoundException('Category not found');
+    if (!category) throw new NotFoundException('Категория не найдена');
 
-    return await this.categoryRepository.save(category);
+    const updatedCategory = await this.categoryRepository.save(category);
+
+    return {
+      message: 'Категория успешно обновлена',
+      data: updatedCategory,
+    };
   }
 
   async removeCategory(id: string) {
     const category = await this.findCategory(id);
 
     await this.categoryRepository.remove(category);
-    return category;
+
+    return {
+      message: 'Категория успешно удалена',
+      data: category,
+    };
   }
 }
