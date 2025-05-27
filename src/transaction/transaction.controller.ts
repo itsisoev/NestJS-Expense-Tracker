@@ -91,4 +91,10 @@ export class TransactionController {
   getBalance(@Req() req) {
     return this.transactionService.calculateBalance(req.user.id);
   }
+
+  @Get('split')
+  @UseGuards(JwtAuthGuard)
+  getSplitTransactions(@Req() req) {
+    return this.transactionService.getExpensesAndIncomes(req.user.id);
+  }
 }

@@ -116,4 +116,21 @@ export class TransactionService {
     const expense = await this.findAllByType(id, 'expense');
     return income - expense;
   }
+
+  async getExpensesAndIncomes(id: string) {
+    const [income, expense] = await Promise.all([
+      this.transactionRepository.find({
+        where: { user: { id }, type: 'income' },
+        relations: ['category'],
+        order: { createdAt: 'DESC' },
+      }),
+      this.transactionRepository.find({
+        where: { user: { id }, type: 'expense' },
+        relations: ['category'],
+        order: { createdAt: 'DESC' },
+      }),
+    ]);
+
+    return { income, expense };
+  }
 }
