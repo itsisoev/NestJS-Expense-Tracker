@@ -8,6 +8,8 @@ import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Transaction } from './entities/transaction.entity';
+import { Between, Raw } from 'typeorm';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class TransactionService {
@@ -132,5 +134,78 @@ export class TransactionService {
     ]);
 
     return { income, expense };
+  }
+
+  async getStatsByPeriod(userId: string, period: 'week' | 'month' | 'year') {
+    let fromDate: Date;
+    const toDate: Date = new Date();
+
+    switch (period) {
+      case 'week':
+        fromDate = dayjs().subtract(6, 'day').startOf('day').toDate();
+        break;
+      case 'month':
+        fromDate = dayjs().subtract(29, 'day').startOf('day').toDate();
+        break;
+      case 'year':
+        fromDate = dayjs().subtract(11, 'month').startOf('month').toDate();
+        break;
+      default:
+        throw new BadRequestException('Invalid period');
+    }
+
+    const transactions = await this.transactionRepository.find({
+      where: {
+        user: { id: userId },
+        createdAt: Between(fromDate, toDate),
+      },
+    });
+
+    const grouped = {};
+
+    for (const tx of transactions) {
+      let key: string;
+
+      if (period === 'year') {
+        key = dayjs(tx.createdAt).format('YYYY-MM');
+      } else {
+        key = dayjs(tx.createdAt).format('YYYY-MM-DD');
+      }
+
+      if (!grouped[key]) {
+        grouped[key] = { income: 0, expense: 0 };
+      }
+
+      grouped[key][tx.type] += tx.amount;
+    }
+
+    const dates: string[] = [];
+    const result: any[] = [];
+
+    if (period === 'year') {
+      for (let i = 11; i >= 0; i--) {
+        const key = dayjs().subtract(i, 'month').format('YYYY-MM');
+        dates.push(key);
+      }
+    } else {
+      const length = period === 'week' ? 7 : 30;
+      for (let i = length - 1; i >= 0; i--) {
+        const key = dayjs().subtract(i, 'day').format('YYYY-MM-DD');
+        dates.push(key);
+      }
+    }
+
+    for (const date of dates) {
+      result.push({
+        date,
+        income: grouped[date]?.income || 0,
+        expense: grouped[date]?.expense || 0,
+      });
+    }
+
+    return {
+      period,
+      data: result,
+    };
   }
 }

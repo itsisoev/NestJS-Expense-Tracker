@@ -97,4 +97,10 @@ export class TransactionController {
   getSplitTransactions(@Req() req) {
     return this.transactionService.getExpensesAndIncomes(req.user.id);
   }
+
+  @Get('stats')
+  @UseGuards(JwtAuthGuard)
+  getStats(@Req() req, @Query('period') period: 'week' | 'month' | 'year') {
+    return this.transactionService.getStatsByPeriod(req.user.id, period);
+  }
 }
